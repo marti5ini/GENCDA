@@ -31,16 +31,15 @@ class NCDApriori:
     Implementation of NCDA algorithm.
     """
 
-    def __init__(self, dataset, graph):
+    def __init__(self, dataset):
         """
         :param dataset: pandas.DataFrame
 
         :param folder_path: string
             The location of the directory to save results
-        :param graph: networkx.DiGraph
         """
         self.df = dataset
-        self.graph = graph
+        self.relations = None
 
     def fitApriori(self, target='m', zmax=3, nbins=4, strategy='quantile', support=5):
         """
@@ -65,8 +64,6 @@ class NCDApriori:
         if self.df.columns.dtype != 'str':
             self.df.columns = self.df.columns.astype(str)
 
-        edges = [(str(source), str(destination)) for source, destination in self.graph.edges]
-
         # Instantiate Apriori
         fim = Apriori(self.df, support=support, nbins=nbins, target=target,
                       zmax=zmax, strategy=strategy)
@@ -76,20 +73,29 @@ class NCDApriori:
         try:
             if target != 'm':
                 fim_results = fim.get_results()
-                confusion_matrix = check_relations_founded(fim_results, edges, self.graph, itemset=True)
+                self.relations = fim_results
             else:
                 maximals = fim.get_results(to_tuple=True)
                 fim_results = check_maximal(maximals)
                 maximals = [frozenset(maximal) for maximal in fim_results]
-                confusion_matrix = check_relations_founded(maximals, edges, self.graph, itemset=True)
+                self.relations = maximals
 
-            precision, recall, accuracy, f1 = evaluation_measures(confusion_matrix)
-            performance_measures = {'precision': precision, 'recall': recall, 'accuracy': accuracy, 'f1': f1}
-            return fim_results, performance_measures
+            return fim_results
 
         except IndexError:
             return 'IndexError: Apriori does not detect any frequent itemsets. ' \
                    'Try a different number of bins.'
+
+    def evaluateRelations(self, graph):
+        """
+
+        :param graph: networkx.DiGraph
+        :return: dict
+        """
+        edges = [(str(source), str(destination)) for source, destination in graph.edges]
+        confusion_matrix = check_relations_founded(self.relations, edges, graph, itemset=True)
+        precision, recall, accuracy, f1 = evaluation_measures(confusion_matrix)
+        return {'precision': precision, 'recall': recall, 'accuracy': accuracy, 'f1': f1}
 
     def fitNCD(self, itemsets, alpha=0.001, sorting=np.mean, train_size=0.7, standardization=True):
         """
@@ -160,6 +166,7 @@ class NCDApriori:
         else:
             raise ValueError('Must first run the fitApriori method.')
 
+
 if __name__ == '__main__':
     path = '/Users/martina/Desktop'
     directory = os.path.realpath(os.path.dirname(__file__))
@@ -168,5 +175,5 @@ if __name__ == '__main__':
     graph = nx.DiGraph()
     graph.add_nodes_from(['w', 'y', 'x', 'z'])
     graph.add_edges_from([('w', 'x'), ('w', 'y'), ('x', 'z'), ('y', 'z')])
-    ncda = NCDApriori(data, path, graph)
+    ncda = NCDApriori(data)
     ncda.fitApriori()
