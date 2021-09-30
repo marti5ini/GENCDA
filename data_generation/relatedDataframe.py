@@ -57,12 +57,21 @@ class RelatedDataframe:
 
         self._values[node] = column
 
-    def generate_data(self):
+    def generate_data(self, is_sorted=True):
+        """
+
+        :param is_sorted: bool, default = True
+            Choose if order index
+        :return: pandas DataFrame
+        """
         for node in nx.topological_sort(self.graph):
             predecessors = list(self.graph.predecessors(node))
             self._generate_column(node, predecessors)
 
-        self.dataframe = pd.DataFrame(self._values).sort_index(axis=1)
+        if is_sorted:
+            self.dataframe = pd.DataFrame(self._values).sort_index(axis=1)
+        else:
+            self.dataframe = pd.DataFrame(self._values)
 
         return self.dataframe
 
