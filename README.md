@@ -4,7 +4,7 @@ Welcome to the complete beginner's guide to **GENCDA**, a **GE**nerative method 
 
 # Tutorial
 
-A tutorial is available [here].(https://github.com/marti5ini/GENCDA/blob/master/gencda.ipynb).
+A tutorial is available [here](https://github.com/marti5ini/GENCDA/blob/master/gencda.ipynb).
 
 # Installation
 
