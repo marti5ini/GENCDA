@@ -18,7 +18,7 @@ cd GENCDA
 Dependencies are listed in requirements.txt, a virtual environment is advised:
 
 ```
-mkvirtualenv glocalx # optional but reccomended
+mkvirtualenv gencda # optional but reccomended
 pip3 install -r requirements.txt
 ```
 
