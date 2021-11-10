@@ -1,4 +1,4 @@
-# GENCDA Documentation!
+# GENCDA 
 
 Welcome to the complete beginner's guide to **GENCDA**, a **GE**nerative method based on **N**onlinear **C**ausal **D**iscovery with **A**priori! If you're looking for a comprehensive guide to our approach, then you've come to the right place. 
 
