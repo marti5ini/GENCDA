@@ -82,8 +82,10 @@ def plotKDE(column1, column2, label1='Original Data', label2='GENCDA'):
     # Fit Kernel Density Function
     kde1 = fit_kde(data1)
     kde2 = fit_kde(data2)
-    x_grid = np.linspace(min(np.min(data1), np.min(data2)),
-                         max(np.max(data1), np.max(data2)), 1000).reshape(-1, 1)
+    # x_grid = np.linspace(min(np.min(data1), np.min(data2)),
+    #                      max(np.max(data1), np.max(data2)), 1000).reshape(-1, 1)
+
+    x_grid = np.linspace(np.min(data1), np.max(data1),  1000).reshape(-1, 1)
 
     # Probability Density Function
     pdf1 = np.exp(kde1.score_samples(x_grid))
