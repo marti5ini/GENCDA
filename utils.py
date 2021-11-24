@@ -118,22 +118,6 @@ def all_matrices(n):
             matrices.append(adj_matrix)
     return matrices
 
-
-def plot_predictionAndConfidenceInterval(x, y, gpr):
-    x_pred = np.linspace(min(x), max(x), 1000).reshape(-1, 1)
-    y_pred, sigma = gpr.predict(x_pred, return_std=True)
-    sigma = sigma.reshape(-1, 1)
-
-    plt.figure()
-    plt.plot(x, y, 'r.', markersize=5, label='Observations')
-    plt.plot(x_pred, y_pred, 'b-', label='Prediction')
-    plt.fill_between(x_pred.reshape(-1),
-                     np.reshape(y_pred - 1.9600 * sigma, -1),
-                     np.reshape(y_pred + 1.9600 * sigma, -1),
-                     alpha=.5, label='95% confidence interval')
-    plt.show()
-
-
 def show_dependency(results, columns):
     for idx, adjacency_matrix in enumerate(results):
         print(f'Causal dependence n: {idx}')

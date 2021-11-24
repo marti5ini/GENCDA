@@ -26,8 +26,7 @@ class NonlinearANM:
         """
         self.data = training_data
         self.features_names = list(self.data.columns)
-        self.index_col1 = None
-        self.index_col2 = None
+        self.index_col1 = self.index_col2 = self.x = self.y = self.model_fm = self.model_bm = self.residuals_fm = self.residuals_bm =  None
 
     def _binary_test_causal_dependence(self, x, y, kernel, show_plots=False):
         """
@@ -44,13 +43,13 @@ class NonlinearANM:
         # Calculate the the corresponding residual n = y - f(x)
         residuals = y - model.predict(x)
         if show_plots:
+            x_name = self.features_names[self.index_col1]
+            y_name = self.features_names[self.index_col2]
             # Plot the function, the prediction and the 95% confidence interval based on the MSE
-            plot_predictionAndConfidenceInterval(x, y, model)
-            # Plot residuals
-            plt.scatter(x, residuals)
-            plt.show()
+            plot_predictionAndConfidenceInterval(x, y, model, x_name, y_name)
+
         # Statistical test of independence between residuals and independent variable
-        return hsic_gam(residuals, x)
+        return model, residuals, hsic_gam(residuals, x)
 
     def fit_bivariate(self, idx_var1, idx_var2, kernel=None, show_plots=False):
         """
@@ -67,12 +66,12 @@ class NonlinearANM:
             p-values between [two variables, first variable and its residuals, second variable and its residuals]
         """
         self.index_col1, self.index_col2 = idx_var1, idx_var2
-        x, y = self.data.iloc[:, self.index_col1].values.reshape(-1, 1), self.data.iloc[:, self.index_col2].values.reshape(-1, 1)
-        p_value_general = hsic_gam(x, y)
+        self.x, self.y = self.data.iloc[:, self.index_col1].values.reshape(-1, 1), self.data.iloc[:, self.index_col2].values.reshape(-1, 1)
+        p_value_general = hsic_gam(self.x, self.y)
         # Check Forward model (FM)
-        p_value_fm = self._binary_test_causal_dependence(x, y, kernel, show_plots)
+        self.model_fm, self.residuals_fm, p_value_fm = self._binary_test_causal_dependence(self.x, self.y, kernel, show_plots)
         # Check Backward model (BM)
-        p_value_bm = self._binary_test_causal_dependence(y, x, kernel, show_plots)
+        self.model_bm, self.residuals_bm, p_value_bm = self._binary_test_causal_dependence(y, x, kernel, show_plots)
 
         return p_value_general, p_value_fm, p_value_bm
 
@@ -107,6 +106,38 @@ class NonlinearANM:
             print('Neither direction is consistent with the data '
                   'so the generating mechanism cannot be described using this model.')
         return
+
+    @staticmethod
+    def plot(variable1, variable2, name_var1, name_var2, model, residuals):
+
+        # Plot the function, the prediction and the 95% confidence interval based on the MSE
+        x_pred = np.linspace(min(variable1), max(variable1), 1000).reshape(-1, 1)
+        y_pred, sigma = model.predict(x_pred, return_std=True)
+        sigma = sigma.reshape(-1, 1)
+
+        plt.subplot(1, 2, 1)
+        plt.plot(variable1, variable2, 'r.', markersize=5, label='Observations')
+        plt.plot(x_pred, y_pred, 'b-', label='Prediction')
+        plt.fill_between(x_pred.reshape(-1),
+                         np.reshape(y_pred - 1.9600 * sigma, -1),
+                         np.reshape(y_pred + 1.9600 * sigma, -1),
+                         alpha=.5, label='95% confidence interval')
+        plt.xlabel(name_var1)
+        plt.ylabel(name_var2)
+
+        # Plot residuals
+        plt.subplot(1, 2, 2)
+        plt.scatter(x, residuals)
+        plt.xlabel(name_var1)
+        plt.ylabel('Residuals of' + name_var1)
+        plt.show()
+        return
+
+    def show_plots(self):
+        name_x = self.features_names[self.index_col1]
+        name_y = self.features_names[self.index_col2]
+        self.plot(self.x, self.y, name_x, name_y, self.model_fm, self.residuals_fm)
+        self.plot(self.y, self.x, name_y, name_x, self.model_bm, self.residuals_bm)
 
     def _check_mutually_independence(self, X, res, alpha):
         """
@@ -181,7 +212,7 @@ class NonlinearANM:
         :return: list of tuples (ndarray, float)
             adjacency matrix, the probability that it corresponds to the ground-truth graph
         """
-        n = self.data.shape[1]
+        n = len(self.data)
         matrices = all_matrices(n)
         result = []
         tested_dependencies = dict()
