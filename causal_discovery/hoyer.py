@@ -28,7 +28,7 @@ class NonlinearANM:
         self.features_names = list(self.data.columns)
         self.index_col1 = self.index_col2 = self.x = self.y = self.model_fm = self.model_bm = self.residuals_fm = self.residuals_bm =  None
 
-    def _binary_test_causal_dependence(self, x, y, kernel, show_plots=False):
+    def _binary_test_causal_dependence(self, x, y, kernel):
         """
         :param x: numpy ndarray (num_sample) x 1
         :param y: numpy ndarray (num_sample) x 1
@@ -42,12 +42,6 @@ class NonlinearANM:
         model = GaussianProcessRegressor(kernel=kernel).fit(x, y)
         # Calculate the the corresponding residual n = y - f(x)
         residuals = y - model.predict(x)
-        if show_plots:
-            x_name = self.features_names[self.index_col1]
-            y_name = self.features_names[self.index_col2]
-            # Plot the function, the prediction and the 95% confidence interval based on the MSE
-            plot_predictionAndConfidenceInterval(x, y, model, x_name, y_name)
-
         # Statistical test of independence between residuals and independent variable
         return model, residuals, hsic_gam(residuals, x)
 
@@ -69,9 +63,9 @@ class NonlinearANM:
         self.x, self.y = self.data.iloc[:, self.index_col1].values.reshape(-1, 1), self.data.iloc[:, self.index_col2].values.reshape(-1, 1)
         p_value_general = hsic_gam(self.x, self.y)
         # Check Forward model (FM)
-        self.model_fm, self.residuals_fm, p_value_fm = self._binary_test_causal_dependence(self.x, self.y, kernel, show_plots)
+        self.model_fm, self.residuals_fm, p_value_fm = self._binary_test_causal_dependence(self.x, self.y, kernel)
         # Check Backward model (BM)
-        self.model_bm, self.residuals_bm, p_value_bm = self._binary_test_causal_dependence(y, x, kernel, show_plots)
+        self.model_bm, self.residuals_bm, p_value_bm = self._binary_test_causal_dependence(self.y, self.x, kernel)
 
         return p_value_general, p_value_fm, p_value_bm
 
