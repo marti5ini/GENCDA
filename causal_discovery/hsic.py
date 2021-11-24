@@ -45,7 +45,7 @@ def hsic_gam(X, Y):
     """
     :param X: numpy vector with row - sample, col - dim
     :param Y: numpy vector with row - sample, col - dim
-    :return: integer
+    :return: float
     """
     n = X.shape[0]
 

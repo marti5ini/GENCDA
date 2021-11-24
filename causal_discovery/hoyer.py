@@ -17,13 +17,17 @@ class NonlinearANM:
     Implementation of algorithm proposed on
     P. O. Hoyer, D. Janzing, J. M. Mooij, J. R. Peters, and B. Schölkopf.
     Nonlinear causal discovery with additive noise models. NIPS, 2009
+    https://papers.nips.cc/paper/3548-nonlinear-causal-discovery-with-additive-noise-models.pdf
     """
 
-    def __init__(self, df):
+    def __init__(self, training_data):
         """
-        :param df: numpy ndarray
+        :param training_data: pandas.DataFrame
         """
-        self.df = df
+        self.data = training_data
+        self.features_names = list(self.data.columns)
+        self.index_col1 = None
+        self.index_col2 = None
 
     def _binary_test_causal_dependence(self, x, y, kernel, show_plots=False):
         """
@@ -34,8 +38,10 @@ class NonlinearANM:
         :return: float
             p-value of independence test
         """
-        # Instantiate a Gaussian Process model and fit to data using Maximum Likelihood Estimation of the parameters
+        # Instantiate a Gaussian Process model and
+        # fit to data using Maximum Likelihood Estimation of the parameters
         model = GaussianProcessRegressor(kernel=kernel).fit(x, y)
+        # Calculate the the corresponding residual n = y - f(x)
         residuals = y - model.predict(x)
         if show_plots:
             # Plot the function, the prediction and the 95% confidence interval based on the MSE
@@ -46,12 +52,12 @@ class NonlinearANM:
         # Statistical test of independence between residuals and independent variable
         return hsic_gam(residuals, x)
 
-    def fit_bivariate(self, x, y, kernel=None, show_plots=False):
+    def fit_bivariate(self, idx_var1, idx_var2, kernel=None, show_plots=False):
         """
-        :param x: numpy array (num_sample) x 1
-            column of the dataset
-        :param y: numpy array (num_sample) x 1
-            column of the dataset
+        :param idx_var1: int, default = 0
+            Index of the first variable
+        :param idx_var2: int, default = 1
+            Index of the second variable
         :param kernel: kernel instance
             the kernel specifying the covariance function of the GP.
             If None is passed, the kernel “1.0 * RBF(1.0)” is used as default.
@@ -60,12 +66,47 @@ class NonlinearANM:
         :return: list
             p-values between [two variables, first variable and its residuals, second variable and its residuals]
         """
-        independence = hsic_gam(x, y)
-        x_y = self._binary_test_causal_dependence(x, y, kernel, show_plots)
-        y_x = self._binary_test_causal_dependence(y, x, kernel, show_plots)
-        results = [independence, x_y, y_x]
+        self.index_col1, self.index_col2 = idx_var1, idx_var2
+        x, y = self.data.iloc[:, self.index_col1].values.reshape(-1, 1), self.data.iloc[:, self.index_col2].values.reshape(-1, 1)
+        p_value_general = hsic_gam(x, y)
+        # Check Forward model (FM)
+        p_value_fm = self._binary_test_causal_dependence(x, y, kernel, show_plots)
+        # Check Backward model (BM)
+        p_value_bm = self._binary_test_causal_dependence(y, x, kernel, show_plots)
 
-        return results
+        return p_value_general, p_value_fm, p_value_bm
+
+    def evaluate(self, p_value_general, p_value_fm, p_value_bm, alpha=0.05):
+        """"
+        :param p_value_general: float,
+            Result of independence test between two variables
+        :param p_value_fm: float,
+            Result of independence test between the first variable and its residuals
+        :param p_value_bm: float,
+            Result of independence test between the second variable and its residuals
+        :param alpha: float, default = 0.05
+            Test threshold
+        :return: string
+        """
+        # Case 1
+        if p_value_general > alpha:
+            print(f'{self.features_names[self.index_col1]} and {self.features_names[self.index_col2]} '
+                  f'are statistically independent')
+        # Case 2
+        elif p_value_fm < alpha < p_value_bm:
+            print(f'{self.features_names[self.index_col1]} causes {self.features_names[self.index_col2]}')
+        # Case 3
+        elif p_value_fm > alpha > p_value_bm:
+            print(f'{self.features_names[self.index_col1]} causes {self.features_names[self.index_col2]}')
+        # Case 4
+        elif p_value_fm > alpha < p_value_bm:
+            print('Both directional models are accepted. '
+                  'We conclude that either model may be correct but we cannot infer it from the data.')
+        # Case 5
+        else:
+            print('Neither direction is consistent with the data '
+                  'so the generating mechanism cannot be described using this model.')
+        return
 
     def _check_mutually_independence(self, X, res, alpha):
         """
@@ -140,7 +181,7 @@ class NonlinearANM:
         :return: list of tuples (ndarray, float)
             adjacency matrix, the probability that it corresponds to the ground-truth graph
         """
-        n = self.df.shape[1]
+        n = self.data.shape[1]
         matrices = all_matrices(n)
         result = []
         tested_dependencies = dict()
@@ -151,8 +192,8 @@ class NonlinearANM:
                 parents_list = has_parents(matrix)
                 for vertex, parents in enumerate(parents_list):
                     if len(parents) > 0:
-                        dependent_col = self.df[:, vertex]
-                        parents_df = self.df[:, parents]
+                        dependent_col = self.data[:, vertex]
+                        parents_df = self.data[:, parents]
                         dependence = (str(parents_list), vertex)
                         # avoid repeating the statistical test of independence storing causal dependencies founded
                         # example: graph1 : w --> x,y e x,y --> z and graph2: x,y --> z
