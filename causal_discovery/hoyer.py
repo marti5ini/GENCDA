@@ -9,7 +9,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 
 from causal_discovery.hsic import *
-from utils import show_dependency, plot_predictionAndConfidenceInterval, all_matrices, is_acyclic, has_parents
+from utils import show_dependency, all_matrices, is_acyclic, has_parents
 
 
 class NonlinearANM:
@@ -121,7 +121,7 @@ class NonlinearANM:
 
         # Plot residuals
         plt.subplot(1, 2, 2)
-        plt.scatter(x, residuals)
+        plt.scatter(variable1, residuals)
         plt.xlabel(name_var1)
         plt.ylabel('Residuals of' + name_var1)
         plt.show()
