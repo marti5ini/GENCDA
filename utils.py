@@ -118,6 +118,7 @@ def all_matrices(n):
             matrices.append(adj_matrix)
     return matrices
 
+
 def show_dependency(results, columns):
     for idx, adjacency_matrix in enumerate(results):
         print(f'Causal dependence n: {idx}')

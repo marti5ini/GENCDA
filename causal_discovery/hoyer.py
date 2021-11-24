@@ -26,9 +26,10 @@ class NonlinearANM:
         """
         self.data = training_data
         self.features_names = list(self.data.columns)
-        self.index_col1 = self.index_col2 = self.x = self.y = self.model_fm = self.model_bm = self.residuals_fm = self.residuals_bm =  None
+        self.index_col1 = self.index_col2 = self.x = self.y = self.model_fm = \
+            self.model_bm = self.residuals_fm = self.residuals_bm = None
 
-    def _binary_test_causal_dependence(self, x, y, kernel):
+    def _binary_test_causal_dependence(self, kernel, direction):
         """
         :param x: numpy ndarray (num_sample) x 1
         :param y: numpy ndarray (num_sample) x 1
@@ -37,15 +38,19 @@ class NonlinearANM:
         :return: float
             p-value of independence test
         """
+        if direction == 'forward':
+            var1, var2 = self.x, self.y
+        else:
+            var1, var2 = self.y, self.x
         # Instantiate a Gaussian Process model and
         # fit to data using Maximum Likelihood Estimation of the parameters
-        model = GaussianProcessRegressor(kernel=kernel).fit(x, y)
+        model = GaussianProcessRegressor(kernel=kernel).fit(var1, var2)
         # Calculate the the corresponding residual n = y - f(x)
-        residuals = y - model.predict(x)
+        residuals = var2 - model.predict(var1)
         # Statistical test of independence between residuals and independent variable
-        return model, residuals, hsic_gam(residuals, x)
+        return model, residuals, hsic_gam(residuals, var1)
 
-    def fit_bivariate(self, idx_var1, idx_var2, kernel=None, show_plots=False):
+    def fit_bivariate(self, idx_var1, idx_var2, kernel=None):
         """
         :param idx_var1: int, default = 0
             Index of the first variable
@@ -63,9 +68,9 @@ class NonlinearANM:
         self.x, self.y = self.data.iloc[:, self.index_col1].values.reshape(-1, 1), self.data.iloc[:, self.index_col2].values.reshape(-1, 1)
         p_value_general = hsic_gam(self.x, self.y)
         # Check Forward model (FM)
-        self.model_fm, self.residuals_fm, p_value_fm = self._binary_test_causal_dependence(self.x, self.y, kernel)
+        self.model_fm, self.residuals_fm, p_value_fm = self._binary_test_causal_dependence(kernel, direction='forward')
         # Check Backward model (BM)
-        self.model_bm, self.residuals_bm, p_value_bm = self._binary_test_causal_dependence(self.y, self.x, kernel)
+        self.model_bm, self.residuals_bm, p_value_bm = self._binary_test_causal_dependence(kernel, direction='backward')
 
         return p_value_general, p_value_fm, p_value_bm
 
@@ -104,36 +109,39 @@ class NonlinearANM:
     @staticmethod
     def plot(variable1, variable2, name_var1, name_var2, model, residuals):
 
+        f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+
         # Plot the function, the prediction and the 95% confidence interval based on the MSE
         x_pred = np.linspace(min(variable1), max(variable1), 1000).reshape(-1, 1)
         y_pred, sigma = model.predict(x_pred, return_std=True)
         sigma = sigma.reshape(-1, 1)
 
-        plt.subplot(1, 2, 1)
-        plt.plot(variable1, variable2, 'r.', markersize=5, label='Observations')
-        plt.plot(x_pred, y_pred, 'b-', label='Prediction')
-        plt.fill_between(x_pred.reshape(-1),
+        ax1.plot(variable1, variable2, 'r.', markersize=5, label='Observations')
+        ax1.plot(x_pred, y_pred, 'b-', label='Prediction')
+        ax1.fill_between(x_pred.reshape(-1),
                          np.reshape(y_pred - 1.9600 * sigma, -1),
                          np.reshape(y_pred + 1.9600 * sigma, -1),
                          alpha=.5, label='95% confidence interval')
-        plt.xlabel(name_var1)
-        plt.ylabel(name_var2)
+        ax1.set_xlabel(name_var1)
+        ax1.set_ylabel(name_var2)
 
         # Plot residuals
-        plt.subplot(1, 2, 2)
-        plt.scatter(variable1, residuals)
-        plt.xlabel(name_var1)
-        plt.ylabel('Residuals of' + name_var1)
-        plt.show()
+        ax2.scatter(variable1, residuals)
+        ax2.set_xlabel(name_var1)
+        ax2.set_ylabel('Residuals of' + name_var1)
         return
 
     def show_plots(self):
         name_x = self.features_names[self.index_col1]
         name_y = self.features_names[self.index_col2]
+        print('Forward Model ' + '(' + name_x + ' , ' + name_y + ')')
         self.plot(self.x, self.y, name_x, name_y, self.model_fm, self.residuals_fm)
+        plt.show()
+        print('Backward Model ' + '(' + name_y + ' , ' + name_x + ')')
         self.plot(self.y, self.x, name_y, name_x, self.model_bm, self.residuals_bm)
 
-    def _check_mutually_independence(self, X, res, alpha):
+    @staticmethod
+    def _check_mutually_independence(X, res, alpha):
         """
         :param X: numpy ndarray (num_samples) x (num_parents)
         :param res: numpy array num_samples
