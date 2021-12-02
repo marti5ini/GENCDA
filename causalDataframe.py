@@ -139,22 +139,10 @@ class CausalDataFrame:
         else:
             return [(str(source), str(destination)) for source, destination in self.graph.edges]
 
-    def show_graph(self):
+    def show_graph(self, node_size=1000, font_size=16):
         """
         :return:  Draw the graph using networkx
         """
-        nx.draw_networkx(self.graph, node_size=1500, font_color='w', font_size=16)
+        nx.draw_networkx(self.graph, node_size=node_size, font_color='w', font_size=font_size)
         plt.show()
         return
-
-
-if __name__ == '__main__':
-    edges = [('0', '2'), ('1', '2'), ('2', '7'), ('1', '4'), ('4', '8')]
-    d = CausalDataFrame(1500, edges, ['3', '5', '6'])
-    d.generate_data()
-    df = d.dataframe
-    df.to_csv("/Users/martina/Documents/df.csv", index=False)
-    print(df[0:5])
-    d.show_graph()
-    plt.savefig('/Users/martina/Documents/ground_truth.png')
-    plt.show()

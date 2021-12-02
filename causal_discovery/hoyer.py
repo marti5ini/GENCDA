@@ -214,7 +214,7 @@ class NonlinearANM:
         :return: list of tuples (ndarray, float)
             adjacency matrix, the probability that it corresponds to the ground-truth graph
         """
-        n = len(self.data)
+        n = len(self.features_names)
         matrices = all_matrices(n)
         result = []
         tested_dependencies = dict()
@@ -225,8 +225,8 @@ class NonlinearANM:
                 parents_list = has_parents(matrix)
                 for vertex, parents in enumerate(parents_list):
                     if len(parents) > 0:
-                        dependent_col = self.data[:, vertex]
-                        parents_df = self.data[:, parents]
+                        dependent_col = self.data.iloc[:, vertex].values
+                        parents_df = self.data.iloc[:, parents].values
                         dependence = (str(parents_list), vertex)
                         # avoid repeating the statistical test of independence storing causal dependencies founded
                         # example: graph1 : w --> x,y e x,y --> z and graph2: x,y --> z

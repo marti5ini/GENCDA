@@ -125,12 +125,13 @@ class NCDApriori:
                     scaler = StandardScaler()
                     # Fit to data, then transform it
                     scaled = scaler.fit_transform(subset.values)
+                    scaled_df = pd.DataFrame(scaled, columns=list(columns_names))
                     # Instantiate causal discovery method on selected features
-                    values = NonlinearANM(scaled)
+                    values = NonlinearANM(scaled_df)
                     # Fit the model
                     possible_dags = values.fit_multivariate(alpha, train_size, sorting)
                 else:
-                    values = NonlinearANM(subset.values)
+                    values = NonlinearANM(subset)
                     possible_dags = values.fit_multivariate(alpha, train_size, sorting)
 
                 # Save causal dependencies found
