@@ -123,14 +123,13 @@ def show_dependency(results, columns, show=True):
     n_dependencies = 0
     for idx, adjacency_matrix in enumerate(results):
         n_dependencies += 1
-        print(f'Causal dependence n: {idx}')
+        if show:
+            print(f'Causal dependence n: {idx}')
         for vert, cols in enumerate(adjacency_matrix.T):
             parents = np.where(cols == 1)[0]
             if len(parents) > 0 and show:
                 print(f'{[columns[par] for par in parents]} --> {columns[vert]}')
     return n_dependencies
-
-
 
 def graph_labels(columns):
     labels = dict()
