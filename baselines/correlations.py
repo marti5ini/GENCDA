@@ -126,6 +126,19 @@ if __name__ == '__main__':
     graph.add_edges_from([('0', '1')])
     nx.draw_networkx(graph)
     plt.show()
-    a = Correlation()
-    df = a.pairwise(data, pearsonr)
-    print(a.evaluate(df, graph))
+    # main class
+    corr = Correlation()
+    # Compute test statistic between two variables
+    r, p_value = corr.pearson(data.iloc[:, 0], data.iloc[:, 1])
+    # Compute pairwise correlation of columns
+    new_df = corr.pairwise(data, pearsonr)
+    columns, confusion_matrix = corr.evaluate(new_df, graph)
+    print(f'List of indices of column pairs that are correlated: {columns}')
+
+    """
+    Evaluation of the number of relations found comparing relations found by correlation metric and the ground truth. 
+    In this case, we verify relations on an undirect acyclic graph.
+
+    """
+    # precision, recall, accuracy, f1 = evaluation_measures(confusion_matrix)
+    # print(f'Precision: {precision}\nRecall: {recall}\nAccuracy: {accuracy}\nF1: {f1}')

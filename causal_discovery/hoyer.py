@@ -252,29 +252,6 @@ class NonlinearANM:
 
 
 if __name__ == '__main__':
-
-    user_input = input('Would you like to try: bivariate or multivariate?')
-    option1 = 'bivariate'
-    option2 = 'multivariate'
-
-    if user_input == option1:
-        # Experiment on abalone dataset (https://archive.ics.uci.edu/ml/datasets/abalone)
-        # Column: Rings, Length
-        # Number of sample: 500
-        directory = os.path.realpath(os.path.dirname(__file__))
-        file_path = os.path.join(os.path.dirname(directory), "datasets", "abalone.csv")
-        dataset = pd.read_csv(file_path)
-        df = dataset.sample(500)
-        first_variable, second_variable = df.iloc[:, [0]], df.iloc[:, [1]]
-
-        kernel = 1.0 * RBF(length_scale=100.0, length_scale_bounds=(1e-2, 1e3)) + WhiteKernel(noise_level=1,
-                                                                                              noise_level_bounds=(
-                                                                                                  1e-10, 1e+1))
-        df = NonlinearANM(df.values)
-        result = df.fit_bivariate(first_variable.values, second_variable.values, kernel=kernel)
-        print(result)
-
-    elif user_input == option2:
         # Experiment on synthetic data used in the paper
         np.random.seed(1)
         n = 1000
@@ -297,5 +274,3 @@ if __name__ == '__main__':
             res.append(adj_matrix)
         columns = ['w', 'x', 'y', 'z']
         show_dependency(res, columns)
-    else:
-        raise ValueError('Digit a correct choice: bivariate or multivariate')
