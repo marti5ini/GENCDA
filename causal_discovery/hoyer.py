@@ -1,12 +1,8 @@
-import os
-import numpy as np
 from operator import itemgetter
 import matplotlib.pyplot as plt
 
-import pandas as pd
 from numpy.random import uniform
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 
 from causal_discovery.hsic import *
 from utils import show_dependency, all_matrices, is_acyclic, has_parents
