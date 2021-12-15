@@ -4,11 +4,16 @@ Welcome to the complete beginner's guide to **GENCDA**, a **GE**nerative method 
 
 # Tutorial
 
-A tutorial is available [here](https://github.com/marti5ini/GENCDA/blob/master/gencda.ipynb).
+For example usage of: 
+
+* [NCDA](https://github.com/marti5ini/GENCDA/blob/master/tutorials/ncda.ipynb)
+* [GENCDA](https://github.com/marti5ini/GENCDA/blob/master/tutorials/gencda.ipynb)
+* [CausalDataframe](https://github.com/marti5ini/GENCDA/blob/master/tutorials/causalDataframe.ipynb)
+
 
 # Setup
 
-The packages requires a python version >=3.7, as well as some libraries listed in requirements file. For some additional functionalities, more libraries are needed for these extra functions and options to become available. 
+The packages requires a python version >=3.8, as well as some libraries listed in requirements file. For some additional functionalities, more libraries are needed for these extra functions and options to become available. 
 
 ```
 git clone https://github.com/marti5ini/GENCDA.git
