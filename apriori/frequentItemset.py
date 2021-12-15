@@ -46,7 +46,7 @@ class Apriori:
     def _baskets(self, discretized_df):
 
         baskets = defaultdict(list)
-        column_names = [column.replace('_', '') if isinstance(column, str) else column for column in self.df.columns]
+        column_names = list(self.df.columns.str.replace('_', ''))
         for i, row in enumerate(discretized_df):
             for elem in range(len(row)):
                 baskets[i].append(str(row[elem]) + "_" + str(column_names[elem]))
@@ -73,7 +73,7 @@ class Apriori:
 
         if len(ordered_itemsets) != 0:
             for pattern in ordered_itemsets:
-                matching = re.findall(r"(_)([A-Za-z]*[0-9]*)", str(pattern[0]))
+                matching = re.findall(r"(_)([A-Za-z0-9]*)", str(pattern[0]))
                 attr_names = [match[1] for match in matching]
                 itemset = frozenset(attr_names)
                 itemsets_with_max_support.add(itemset)

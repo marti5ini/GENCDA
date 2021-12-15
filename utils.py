@@ -131,6 +131,7 @@ def show_dependency(results, columns, show=True):
                 print(f'{[columns[par] for par in parents]} --> {columns[vert]}')
     return n_dependencies
 
+
 def graph_labels(columns):
     labels = dict()
     for i, column in enumerate(columns):

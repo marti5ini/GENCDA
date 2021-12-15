@@ -61,8 +61,9 @@ class NCDApriori:
         :return: set of frequent item sets
         """
         # Check if all columns are strings
-        if self.df.columns.dtype != 'str':
+        if not self.df.columns.astype(str).all():
             self.df.columns = self.df.columns.astype(str)
+            self.df.columns = self.df.columns.str.replace(' ', '')
 
         # Instantiate Apriori
         fim = Apriori(self.df, support=support, nbins=nbins, target=target,
@@ -169,7 +170,7 @@ class NCDApriori:
 
 
 if __name__ == '__main__':
-    path = '/Users/martina/Desktop'
+    """path = '/Users/martina/Desktop'
     directory = os.path.realpath(os.path.dirname(__file__))
     file_path = os.path.join(os.path.dirname(directory), "datasets", "synthetic.csv")
     data = pd.read_csv(file_path)
@@ -177,4 +178,11 @@ if __name__ == '__main__':
     graph.add_nodes_from(['w', 'y', 'x', 'z'])
     graph.add_edges_from([('w', 'x'), ('w', 'y'), ('x', 'z'), ('y', 'z')])
     ncda = NCDApriori(data)
-    ncda.fitApriori()
+    ncda.fitApriori()"""
+    data = pd.read_csv('/Users/martina/Downloads/mice_protein.csv', index_col=False)
+    data.columns = data.columns.str.replace('_', '')
+    data.columns = [x.lower() for x in data.columns]
+
+    ncda = NCDApriori(data.iloc[:, :-1])
+    itemsets = ncda.fitApriori(target='m', zmax=3, nbins=4, strategy='quantile', support=5)
+    causal_relations = ncda.fitNCD(itemsets, alpha=0.001, sorting=np.mean, train_size=0.7, standardization=True)
