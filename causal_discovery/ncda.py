@@ -63,7 +63,7 @@ class NCDApriori:
         # Check if all columns are strings
         if not self.df.columns.astype(str).all():
             self.df.columns = self.df.columns.astype(str)
-            self.df.columns = self.df.columns.str.replace(' ', '')
+        self.df.columns = self.df.columns.str.replace(' ', '')
 
         # Instantiate Apriori
         fim = Apriori(self.df, support=support, nbins=nbins, target=target,
@@ -180,9 +180,11 @@ if __name__ == '__main__':
     ncda = NCDApriori(data)
     ncda.fitApriori()"""
     data = pd.read_csv('/Users/martina/Downloads/mice_protein.csv', index_col=False)
-    data.columns = data.columns.str.replace('_', '')
-    data.columns = [x.lower() for x in data.columns]
+    #data.columns = data.columns.str.replace('_', '')
+    #data.columns = [x.lower() for x in data.columns]
 
     ncda = NCDApriori(data.iloc[:, :-1])
     itemsets = ncda.fitApriori(target='m', zmax=3, nbins=4, strategy='quantile', support=5)
     causal_relations = ncda.fitNCD(itemsets, alpha=0.001, sorting=np.mean, train_size=0.7, standardization=True)
+
+    print(causal_relations)
