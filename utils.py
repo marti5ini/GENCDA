@@ -255,6 +255,7 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
+
 def detect_cycles(graph):
     try:
         cycle = nx.find_cycle(graph)
