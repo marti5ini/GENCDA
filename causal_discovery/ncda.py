@@ -179,7 +179,7 @@ if __name__ == '__main__':
     graph.add_edges_from([('w', 'x'), ('w', 'y'), ('x', 'z'), ('y', 'z')])
     ncda = NCDApriori(data)
     ncda.fitApriori()"""
-    data = pd.read_csv('/Users/martina/Downloads/mice_protein.csv', index_col=False)
+    data = pd.read_csv('/Users/martina/PycharmProjects/calime2/wdbc.csv', index_col=False)
     #data.columns = data.columns.str.replace('_', '')
     #data.columns = [x.lower() for x in data.columns]
 

@@ -9,9 +9,6 @@ import networkx as netx
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
-from sklearn.metrics import mean_squared_error
-
-from data_generation.evaluation.kde import fit_kde
 
 
 def sqrt(x):
@@ -258,46 +255,38 @@ class AutoVivification(dict):
             value = self[item] = type(self)()
             return value
 
-
 def detect_cycles(graph):
     try:
         cycle = nx.find_cycle(graph)
     except nx.NetworkXNoCycle:
-        cycle = False
-    return cycle
+        return False, None
+    return True, cycle
 
 
 def delete_cycle(causal_relations_found, graph):
-    no_cycle = set()
-    cycle = detect_cycles(graph)
-    while cycle:
+
+    has_cycle, cycle = detect_cycles(graph)
+    while has_cycle:
         cycle_filter = dict()
         for nodes in cycle:
             # check self-loops
             if nodes[0] == nodes[1]:
                 del causal_relations_found[nodes]
                 graph = nx.DiGraph(list(causal_relations_found.keys()))
-                cycle = detect_cycles(graph)
-                break
+                has_cycle, cycle = detect_cycles(graph)
+                continue
+            # save only probabilities of edges in the cycle
             if nodes not in cycle_filter:
-                cycle_filter[nodes] = 0
+                cycle_filter[nodes] = 0.0
             cycle_filter[nodes] = causal_relations_found[nodes]
 
-        compare = cycle_filter
-        for elem, value in cycle_filter.items():
-            for elem2, value2 in compare.items():
-                if elem != elem2:
-                    if value >= value2:
-                        temp = elem
-                    else:
-                        temp = elem2
-                    no_cycle.add(temp)
-        new_causal = {k: causal_relations_found[k] for k in set(causal_relations_found) - set(cycle_filter)}
-        causal_relations_found = new_causal
-        if new_causal:
-            graph = nx.DiGraph(list(new_causal))
-            cycle = detect_cycles(graph)
-    result = [tuple(elem) for elem in set(causal_relations_found).union(no_cycle)]
+        node_to_delete = min(cycle_filter, key=cycle_filter.get)
+        del causal_relations_found[node_to_delete]
+
+        graph = nx.DiGraph(list(causal_relations_found.keys()))
+        has_cycle, cycle = detect_cycles(graph)
+
+    result = [tuple(elem) for elem in set(causal_relations_found)]
     return result
 
 
