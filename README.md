@@ -27,4 +27,7 @@ python3 -m venv ./venv # optional but recommended
 pip install -r requirements.txt
 ```
 
+Please note that in addition to the dependencies listed in the requirements file, you also need to install a novel version of "fim" package. You can find the package and installation instructions on the following webpage: https://borgelt.net/pyfim.html
+
+
 
