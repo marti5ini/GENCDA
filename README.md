@@ -29,5 +29,18 @@ pip install -r requirements.txt
 
 Please note that in addition to the dependencies listed in the requirements file, you also need to install a novel version of "fim" package. You can find the package and installation instructions on the following webpage: https://borgelt.net/pyfim.html
 
+# Citing this work
+
+```
+@inproceedings{cinquini2021boosting,
+  title={Boosting synthetic data generation with effective nonlinear causal discovery},
+  author={Cinquini, Martina and Giannotti, Fosca and Guidotti, Riccardo},
+  booktitle={2021 IEEE Third International Conference on Cognitive Machine Intelligence (CogMI)},
+  pages={54--63},
+  year={2021},
+  organization={IEEE}
+}
+```
+
 
 
